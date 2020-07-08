@@ -1,0 +1,42 @@
+# Example S3 React Deployment for production
+
+name: Example S3 React Deployment
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+
+on:
+  push:
+    branches: [ master, production, staging, dev-main, ]
+  pull_request:
+    branches: [ master, production, staging, dev-main, ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build" which runs on both node 10.x and 12.x. It then Deploys specifically the build folder to the specified S3 Bucket after building
+  build:
+  
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x,]
+
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials 
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Build App
+      run: |
+        yarn install
+        yarn build
+    - name: Deploy to S3
+      run: aws s3 sync ./build s3://YOURBUCKETNAMEHERE --delete 
+          
